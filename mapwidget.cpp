@@ -3,7 +3,7 @@
 #include <QNetworkRequest>
 #include <QDebug>
 #include <cmath>
-#include <QVBoxLayout> // Ajouter cette ligne
+#include <QVBoxLayout>
 
 MapWidget::MapWidget(QWidget *parent)
     : QGraphicsView(parent), zoomLevel(12)
@@ -27,12 +27,11 @@ MapWidget::MapWidget(QWidget *parent)
     container->setLayout(layout);
     setParent(container);
 
-    setCenter( 6.839349,47.64263, zoomLevel); // Centrer sur les coordonnées WGS84
+    setCenter(6.839349, 47.64263, zoomLevel); // Centrer sur les coordonnées WGS84
 }
 
 void MapWidget::setCenter(double latitude, double longitude, int zoom)
 {
-    //print les coordonnées pour debuguer
     zoomLevel = zoom;
     centerTile = latLonToTile(longitude, latitude, zoomLevel);
     centerOffset = QPointF(0, 0); // Ajuster si nécessaire
@@ -104,8 +103,23 @@ void MapWidget::onTileDownloaded(QNetworkReply *reply)
     debugLabel->setText(QString("Tuile chargée : Zoom %1, X %2, Y %3").arg(zoom).arg(x).arg(y));
 }
 
+
+
+void MapWidget::centerScene()
+{
+    // Calculer la position centrale de la scène
+    QRectF sceneRect = scene->itemsBoundingRect();
+    QPointF center = sceneRect.center();
+
+    // Centrer la vue sur la tuile centrale
+    centerOn(center);
+}
+
 void MapWidget::updateTiles()
 {
+    // Nettoyer la scène avant de charger de nouvelles tuiles
+    scene->clear();
+
     int tileX = static_cast<int>(centerTile.x());
     int tileY = static_cast<int>(centerTile.y());
 
@@ -117,12 +131,15 @@ void MapWidget::updateTiles()
             loadTile(x, y, zoomLevel);
         }
     }
+
+    // Centrer la scène sur la tuile centrale
+    centerScene();
 }
 
 void MapWidget::resizeEvent(QResizeEvent *event)
 {
     QGraphicsView::resizeEvent(event);
-    updateTiles(); // Mettre à jour les tuiles lors du redimensionnement
+    centerScene(); // Recentrer la scène lors du redimensionnement
 }
 
 int MapWidget::getZoomLevel() const

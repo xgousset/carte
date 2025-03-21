@@ -24,6 +24,9 @@ private slots:
     void onTileDownloaded(QNetworkReply *reply);
 
 private:
+    void centerScene();
+
+private:
     QGraphicsScene *scene;
     QNetworkAccessManager *networkManager;
     int zoomLevel;
